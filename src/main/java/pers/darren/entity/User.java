@@ -69,6 +69,16 @@ public class User implements Serializable {
     @TableField("modified_time")
     private LocalDateTime modifiedTime;
 
+    public User() {
+    }
+
+    public User(String name, Integer age, String email, Long createdBy) {
+        this.name = name;
+        this.age = age;
+        this.email = email;
+        this.createdBy = createdBy;
+    }
+
     public Long getId() {
         return id;
     }
