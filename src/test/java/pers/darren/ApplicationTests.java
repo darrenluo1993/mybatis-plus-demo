@@ -1,11 +1,12 @@
-package pers.darren.mybatisplusdemo;
+package pers.darren;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
-import pers.darren.domain.User;
+import pers.darren.entity.User;
 import pers.darren.mapper.UserMapper;
+import pers.darren.service.IUserService;
 
 import java.util.List;
 
@@ -14,6 +15,8 @@ class ApplicationTests {
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private IUserService userService;
 
     @Test
     public void testSelect() {
@@ -23,4 +26,11 @@ class ApplicationTests {
         userList.forEach(System.out::println);
     }
 
+    @Test
+    public void testList() {
+        System.out.println(("----- list method test ------"));
+        List<User> list = userService.list();
+        Assert.isTrue(5 == list.size(), "");
+        list.forEach(System.out::println);
+    }
 }

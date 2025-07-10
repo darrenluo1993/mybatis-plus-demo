@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="pers.darren.mapper.UserMapper">
+<mapper namespace="pers.darren.mapper.RoleMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="pers.darren.entity.User">
+    <resultMap id="BaseResultMap" type="pers.darren.entity.Role">
         <id column="id" property="id" />
-        <result column="name" property="name" />
-        <result column="age" property="age" />
-        <result column="email" property="email" />
+        <result column="role_name" property="roleName" />
+        <result column="role_desc" property="roleDesc" />
         <result column="created_by" property="createdBy" />
         <result column="created_time" property="createdTime" />
         <result column="modified_by" property="modifiedBy" />
@@ -16,7 +15,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, name, age, email, created_by, created_time, modified_by, modified_time
+        id, role_name, role_desc, created_by, created_time, modified_by, modified_time
     </sql>
 
 </mapper>
