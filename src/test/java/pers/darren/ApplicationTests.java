@@ -2,6 +2,10 @@ package pers.darren;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -117,5 +121,38 @@ class ApplicationTests {
         result = userService.remove(lambdaQueryWrapper);
         Assert.isTrue(result, "");
         System.out.println("removeByLambdaQueryWrapper Success！");
+    }
+
+    @Test
+    public void testUpdateByUpdateWrapper() {
+        System.out.println("----- updateByUpdateWrapper method test ------");
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("id", 22L).set("name", "Grace Ai").set("email", "graceai@example.com").set("modified_by", 1L);
+        boolean result = userService.update(updateWrapper);
+        Assert.isTrue(result, "");
+        System.out.println("updateByUpdateWrapper Success！");
+        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.eq(User::getId, 17L).set(User::getName, "Frank Liu").set(User::getEmail, "frankliu@example.com").set(User::getModifiedBy, 1L);
+        result = userService.update(lambdaUpdateWrapper);
+        Assert.isTrue(result, "");
+        System.out.println("updateByLambdaUpdateWrapper Success！");
+    }
+
+    @Test
+    public void testPage() {
+        System.out.println("----- page method test ------");
+        IPage<User> page = new Page<>(1, 5);
+        IPage<User> result = userService.page(page);
+        Assert.isTrue(result.getTotal() > 0, "");
+        result.getRecords().forEach(System.out::println);
+        System.out.println("page Success！");
+        result = userService.page(page, new QueryWrapper<User>().eq("age", 18));
+        Assert.isTrue(result.getTotal() > 0, "");
+        result.getRecords().forEach(System.out::println);
+        System.out.println("page Success！");
+        result = userService.page(page, new LambdaQueryWrapper<User>().eq(User::getAge, 22));
+        Assert.isTrue(result.getTotal() > 0, "");
+        result.getRecords().forEach(System.out::println);
+        System.out.println("page Success！");
     }
 }
