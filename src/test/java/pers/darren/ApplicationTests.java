@@ -5,7 +5,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
+import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
+import com.baomidou.mybatisplus.extension.conditions.update.UpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.toolkit.Db;
+import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,8 +20,11 @@ import pers.darren.entity.User;
 import pers.darren.mapper.UserMapper;
 import pers.darren.service.IUserService;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.baomidou.mybatisplus.core.toolkit.Wrappers.lambdaQuery;
+import static com.baomidou.mybatisplus.core.toolkit.Wrappers.query;
 
 @SpringBootTest
 class ApplicationTests {
@@ -111,12 +120,12 @@ class ApplicationTests {
         boolean result = userService.removeById(19L);
         Assert.isTrue(result, "");
         System.out.println("removeById Success！");
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<User> queryWrapper = query();
         queryWrapper.eq("name", "Eve1");
         result = userService.remove(queryWrapper);
         Assert.isTrue(result, "");
         System.out.println("removeByQueryWrapper Success！");
-        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<User> lambdaQueryWrapper = lambdaQuery();
         lambdaQueryWrapper.eq(User::getName, "Frank1").eq(User::getAge, 26).eq(User::getEmail, "frank@example.com");
         result = userService.remove(lambdaQueryWrapper);
         Assert.isTrue(result, "");
@@ -142,7 +151,9 @@ class ApplicationTests {
     public void testPage() {
         System.out.println("----- page method test ------");
         IPage<User> page = new Page<>(1, 5);
-        IPage<User> result = userService.page(page);
+        LambdaQueryWrapper<User> lambdaQueryWrapper = lambdaQuery();
+        lambdaQueryWrapper.orderByDesc(User::getModifiedTime);
+        IPage<User> result = userService.page(page, lambdaQueryWrapper);
         Assert.isTrue(result.getTotal() > 0, "");
         result.getRecords().forEach(System.out::println);
         System.out.println("page Success！");
@@ -154,5 +165,99 @@ class ApplicationTests {
         Assert.isTrue(result.getTotal() > 0, "");
         result.getRecords().forEach(System.out::println);
         System.out.println("page Success！");
+    }
+
+    @Test
+    public void testQueryChainWrapper() {
+        System.out.println("----- queryChainWrapper method test ------");
+        QueryChainWrapper<User> queryChainWrapper = userService.query();
+        User user = queryChainWrapper.eq("id", 1L).select("id", "name", "age", "email").one();
+        System.out.println(user);
+        System.out.println("queryChainWrapper Success！");
+        LambdaQueryChainWrapper<User> lambdaQueryChainWrapper = userService.lambdaQuery();
+        user = lambdaQueryChainWrapper.eq(User::getId, 2L).select(User::getId, User::getName, User::getAge, User::getEmail).one();
+        System.out.println(user);
+        System.out.println("lambdaQueryChainWrapper Success！");
+    }
+
+    @Test
+    public void testUpdateChainWrapper() {
+        System.out.println("----- updateChainWrapper method test ------");
+        UpdateChainWrapper<User> updateChainWrapper = userService.update();
+        boolean result = updateChainWrapper.eq("id", 3L).set("name", "Charlie Liu").set("email", "charlieliu@example.com").set("modified_by", 1L).update();
+        Assert.isTrue(result, "");
+        System.out.println("updateChainWrapper Success！");
+        LambdaUpdateChainWrapper<User> lambdaUpdateChainWrapper = userService.lambdaUpdate();
+        result = lambdaUpdateChainWrapper.eq(User::getId, 4L).set(User::getName, "David Ai").set(User::getEmail, "davidai@example.com").set(User::getModifiedBy, 1L).update();
+        Assert.isTrue(result, "");
+        System.out.println("lambdaUpdateChainWrapper Success！");
+    }
+
+    @Test
+    public void testActiveRecord() {
+        System.out.println("----- activeRecord method test ------");
+        User user = new User();
+        List<User> list = user.selectAll();
+        Assert.isTrue(!list.isEmpty(), "");
+        list.forEach(System.out::println);
+        System.out.println("activeRecord Success！");
+        user.setId(5L);
+        user.setName("Eve Liu");
+        user.setAge(18);
+        user.setEmail("eve.liu@example.com");
+        user.setModifiedBy(1L);
+        boolean result = user.updateById();
+        Assert.isTrue(result, "");
+        System.out.println("activeRecord Success！");
+        user = user.selectById();
+        System.out.println(user);
+        System.out.println("activeRecord Success！");
+        user = new User();
+        user.setName("zhangsan");
+        user.setAge(27);
+        user.setEmail("zhangsan@example.com");
+        user.setCreatedBy(1L);
+        result = user.insertOrUpdate();
+        Assert.isTrue(result, "");
+        System.out.println("activeRecord Success！");
+        user.setName("ZhangSan");
+        user.setAge(25);
+        user.setEmail("zhangsan@163.com");
+        result = user.insertOrUpdate();
+        Assert.isTrue(result, "");
+        System.out.println("activeRecord Success！");
+    }
+
+    @Test
+    public void testSimpleQuery() {
+        System.out.println("----- simpleQuery method test ------");
+        List<User> list = new ArrayList<>();
+        SimpleQuery.list(lambdaQuery(User.class).eq(User::getAge, 18), User::getName, user -> System.out.println(user.getId() + " " + user.getName()), list::add).forEach(System.out::println);
+        list.forEach(System.out::println);
+        System.out.println("simpleQuery Success！");
+        Map<Long, User> map = SimpleQuery.keyMap(lambdaQuery(User.class).eq(User::getAge, 18), User::getId, user -> System.out.println(user.getId() + " " + user.getName()));
+        map.forEach((id, user) -> System.out.println("key:" + id + ", value:" + user));
+        System.out.println("simpleQuery Success！");
+        Map<Long, String> map1 = SimpleQuery.map(lambdaQuery(User.class).eq(User::getAge, 18), User::getId, User::getName, user -> System.out.println(user.getId() + " " + user.getName()));
+        map1.forEach((id, name) -> System.out.println("key:" + id + ", value:" + name));
+        System.out.println("simpleQuery Success！");
+        Map<Integer, List<User>> map2 = SimpleQuery.group(lambdaQuery(User.class).ne(User::getName, "zhangsan").orderByAsc(User::getAge, User::getId), User::getAge, user -> System.out.println(user.getId() + " " + user.getName() + " " + user.getAge()));
+        map2.forEach((age, list1) -> System.out.println("key:" + age + ", valueSize:" + list1.size()));
+        System.out.println("simpleQuery Success！");
+        Map<Integer, Long> map3 = SimpleQuery.group(lambdaQuery(User.class).between(User::getAge, 18, 20).orderByAsc(User::getAge, User::getId), User::getAge, Collectors.counting(), user -> System.out.println(user.getId() + " " + user.getName() + " " + user.getAge()));
+        map3.forEach((age, count) -> System.out.println("key:" + age + ", value:" + count));
+        System.out.println("simpleQuery Success！");
+        Map<Integer, Optional<User>> map4 = SimpleQuery.group(lambdaQuery(User.class).between(User::getAge, 18, 20).orderByAsc(User::getAge, User::getId), User::getAge, Collectors.minBy(Comparator.comparingLong(User::getId)), user -> System.out.println(user.getId() + " " + user.getName() + " " + user.getAge()));
+        map4.forEach((age, optional) -> System.out.println("key:" + age + ", value:" + (optional.isPresent() ? optional.get() : "null")));
+        System.out.println("simpleQuery Success！");
+    }
+
+    @Test
+    public void testDbKit() {
+        System.out.println("----- dbKit method test ------");
+        Db.list(lambdaQuery(User.class).eq(User::getAge, 20)).forEach(System.out::println);
+        System.out.println("dbKit Success！");
+        Db.listMaps(lambdaQuery(User.class).eq(User::getAge, 20)).forEach(map -> System.out.println(map.get("id") + " " + map.get("name")));
+        System.out.println("dbKit Success！");
     }
 }

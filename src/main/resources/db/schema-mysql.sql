@@ -4,11 +4,11 @@ DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user`
 (
     `id`            bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `name`          varchar(30) DEFAULT NULL COMMENT '姓名',
-    `age`           tinyint(3)  DEFAULT NULL COMMENT '年龄',
-    `email`         varchar(50) DEFAULT NULL COMMENT '邮箱',
+    `name`          varchar(30) collate utf8mb4_0900_bin DEFAULT NULL COMMENT '姓名',
+    `age`           tinyint(3)                           DEFAULT NULL COMMENT '年龄',
+    `email`         varchar(50)                          DEFAULT NULL COMMENT '邮箱',
     `created_by`    bigint(20) COMMENT '创建人',
-    `created_time`  datetime    default current_timestamp COMMENT '创建时间',
+    `created_time`  datetime                             default current_timestamp COMMENT '创建时间',
     `modified_by`   bigint(20) COMMENT '修改人',
     `modified_time` datetime on update current_timestamp COMMENT '修改时间',
     PRIMARY KEY (`id`)
@@ -21,9 +21,9 @@ DROP TABLE IF EXISTS `role`;
 -- 创建role表
 CREATE TABLE `role`
 (
-    `id`            bigint(20)   NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `role_name`     varchar(30)  NOT NULL COMMENT '角色名',
-    `role_desc`     varchar(150) NOT NULL COMMENT '角色描述',
+    `id`            bigint(20)                           NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `role_name`     varchar(30) collate utf8mb4_0900_bin NOT NULL COMMENT '角色名',
+    `role_desc`     varchar(150)                         NOT NULL COMMENT '角色描述',
     `created_by`    bigint(20) COMMENT '创建人',
     `created_time`  datetime default current_timestamp COMMENT '创建时间',
     `modified_by`   bigint(20) COMMENT '修改人',
