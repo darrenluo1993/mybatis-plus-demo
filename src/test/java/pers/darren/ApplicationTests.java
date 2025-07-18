@@ -12,7 +12,13 @@ import com.baomidou.mybatisplus.extension.conditions.update.UpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.toolkit.Db;
 import com.baomidou.mybatisplus.extension.toolkit.SimpleQuery;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
@@ -20,11 +26,18 @@ import pers.darren.entity.User;
 import pers.darren.mapper.UserMapper;
 import pers.darren.service.IUserService;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.alibaba.fastjson.JSON.toJSONString;
 import static com.baomidou.mybatisplus.core.toolkit.Wrappers.lambdaQuery;
 import static com.baomidou.mybatisplus.core.toolkit.Wrappers.query;
+import static pers.darren.enums.Gender.FEMALE;
+import static pers.darren.enums.Gender.MALE;
+import static pers.darren.enums.PasswordType.PASSWORD_TYPE_3;
+import static pers.darren.enums.UserStatus.USER_STATUS_1;
+import static pers.darren.enums.UserStatus.USER_STATUS_2;
 
 @SpringBootTest
 class ApplicationTests {
@@ -259,5 +272,104 @@ class ApplicationTests {
         System.out.println("dbKit Success！");
         Db.listMaps(lambdaQuery(User.class).eq(User::getAge, 20)).forEach(map -> System.out.println(map.get("id") + " " + map.get("name")));
         System.out.println("dbKit Success！");
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void testWrapperFunc(boolean isAdult) {
+        System.out.println("----- func method test ------");
+        LambdaQueryWrapper<User> lambdaQueryWrapper = lambdaQuery();
+        lambdaQueryWrapper.func(wrapper -> {
+            if (isAdult) {
+                wrapper.ge(User::getAge, 18);
+            } else {
+                wrapper.lt(User::getAge, 18);
+            }
+        });
+        this.userService.list(lambdaQueryWrapper).forEach(System.out::println);
+        System.out.println("func Success！");
+    }
+
+    @Test
+    public void testWrapperNested() {
+        System.out.println("----- nested method test ------");
+        LambdaQueryWrapper<User> lambdaQueryWrapper = lambdaQuery();
+        lambdaQueryWrapper.nested(wrapper -> wrapper.eq(User::getAge, 18).eq(User::getName, "root"));
+        lambdaQueryWrapper.or();
+        lambdaQueryWrapper.nested(wrapper -> wrapper.eq(User::getAge, 24).eq(User::getName, "Billie"));
+        this.userService.list(lambdaQueryWrapper).forEach(System.out::println);
+        System.out.println("nested Success！");
+        lambdaQueryWrapper = lambdaQuery();
+        lambdaQueryWrapper.eq(User::getAge, 18).eq(User::getName, "root").or().eq(User::getAge, 24).eq(User::getName, "Billie");
+        this.userService.list(lambdaQueryWrapper).forEach(System.out::println);
+    }
+
+    @Test
+    public void testWrapperSelect() {
+        System.out.println("----- select method test ------");
+        LambdaQueryWrapper<User> lambdaQueryWrapper = lambdaQuery();
+        lambdaQueryWrapper.select(User::getId, User::getName);
+        lambdaQueryWrapper.last("limit 1");
+        this.userService.list(lambdaQueryWrapper).forEach(System.out::println);
+        System.out.println("select Success！");
+        lambdaQueryWrapper = lambdaQuery(User.class);
+        lambdaQueryWrapper.select(tableFieldInfo -> {
+            String property = tableFieldInfo.getProperty();
+            return property.equals("id") || property.equals("name") || property.equals("age");
+        });
+        lambdaQueryWrapper.last("limit 1");
+        this.userService.list(lambdaQueryWrapper).forEach(System.out::println);
+        System.out.println("select Success！");
+    }
+
+    @Test
+    public void testResultHandler() {
+        LambdaQueryWrapper<User> lambdaQueryWrapper = lambdaQuery();
+        lambdaQueryWrapper.eq(User::getAge, 18);
+        this.userMapper.selectList(lambdaQueryWrapper, resultContext -> {
+            System.out.print("count: " + resultContext.getResultCount() + ", ");
+            User user = resultContext.getResultObject();
+            System.out.println(user);
+        });
+    }
+
+    @Test
+    public void testAutoEnumMapping() throws JsonProcessingException {
+        System.out.println("----- autoEnumMapping method test ------");
+        User user = this.userService.getById(1L);
+        user.setGender(MALE);
+        user.setUserStatus(USER_STATUS_1);
+        user.setPasswordType(PASSWORD_TYPE_3);
+        user.setModifiedBy(1L);
+        user.insertOrUpdate();
+
+        String userJSON = toJSONString(user, true);
+        System.out.println(userJSON);
+
+        JsonMapper jsonMapper = new JsonMapper();
+        jsonMapper.registerModule(new JavaTimeModule());
+        jsonMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+        ObjectWriter objectWriter = jsonMapper.writerWithDefaultPrettyPrinter();
+        userJSON = objectWriter.writeValueAsString(user);
+        System.out.println(userJSON);
+    }
+
+    @Test
+    public void testMetaObjectHandler() {
+        User user = new User("test", 18, MALE, "test@163.com", USER_STATUS_1, PASSWORD_TYPE_3);
+        user.insert();
+        System.out.println(user);
+        user.setGender(FEMALE);
+        user.setEmail("test@gmail.com");
+        user.setUserStatus(USER_STATUS_2);
+        user.updateById();
+        System.out.println(user);
+    }
+
+    @Test
+    public void testLogicDelete() {
+        System.out.println("----- logicDelete method test ------");
+        this.userService.removeById(5L);
+        System.out.println("logicDelete Success！");
     }
 }
