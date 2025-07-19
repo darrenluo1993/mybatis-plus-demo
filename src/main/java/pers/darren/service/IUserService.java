@@ -3,6 +3,8 @@ package pers.darren.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import pers.darren.entity.User;
 
+import java.util.List;
+
 /**
  * <p>
  * 用户信息表 服务类
@@ -13,4 +15,7 @@ import pers.darren.entity.User;
  */
 public interface IUserService extends IService<User> {
 
+    List<User> listByAge(int age);
+
+    List<User> listByName(String name);
 }

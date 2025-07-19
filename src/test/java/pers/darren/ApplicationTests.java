@@ -376,4 +376,19 @@ class ApplicationTests {
         this.userService.removeById(5L);
         System.out.println("logicDelete Success！");
     }
+
+    @Test
+    public void testDynamicDatasource() {
+        System.out.println("----- dynamicDatasource method test ------");
+        // 从主库查询
+        System.out.println("----- 从主库查询 ------");
+        this.userService.list(lambdaQuery(User.class).eq(User::getAge, 18)).forEach(System.out::println);
+        // 从从库1查询
+        System.out.println("----- 从从库1查询 ------");
+        this.userService.listByAge(18).forEach(System.out::println);
+        // 从从库2查询
+        System.out.println("----- 从从库2查询 ------");
+        this.userService.listByName("root").forEach(System.out::println);
+        System.out.println("dynamicDatasource Success！");
+    }
 }
