@@ -69,7 +69,11 @@ class ApplicationTests {
         User user = new User();
         user.setName("Darren");
         user.setAge(18);
+        user.setGender(MALE);
         user.setEmail("darren@gmail.com");
+        user.setUserStatus(USER_STATUS_1);
+        user.setPasswordType(PASSWORD_TYPE_3);
+        user.setPassword("123456");
         user.setCreatedBy(1L);
         boolean result = userService.save(user);
         Assert.isTrue(result, "");

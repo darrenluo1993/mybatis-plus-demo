@@ -8,6 +8,7 @@ import pers.darren.enums.Gender;
 import pers.darren.enums.PasswordType;
 import pers.darren.enums.UserStatus;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -26,6 +27,7 @@ import static com.baomidou.mybatisplus.annotation.FieldFill.UPDATE;
 @TableName("user")
 public class User extends Model<User> implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
@@ -72,6 +74,12 @@ public class User extends Model<User> implements Serializable {
     @TableField("password_type")
     @JSONField(serialzeFeatures = WriteEnumUsingToString)
     private PasswordType passwordType;
+
+    /**
+     * 密码
+     */
+    @TableField(value = "password", select = false)
+    private String password;
 
     /**
      * 创建人
@@ -188,6 +196,14 @@ public class User extends Model<User> implements Serializable {
 
     public void setPasswordType(PasswordType passwordType) {
         this.passwordType = passwordType;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public Long getCreatedBy() {
